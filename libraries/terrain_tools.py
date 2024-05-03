@@ -82,7 +82,7 @@ def cluster_data(X,nc):
  if nc > 1:
   nfeatures = X.shape[1]
   #model = sklearn.cluster.MiniBatchKMeans(n_clusters=nc,random_state=35799)
-  model = sklearn.cluster.KMeans(n_clusters=nc,random_state=35799)
+  model = sklearn.cluster.KMeans(n_clusters=nc,random_state=35799,n_init=10)
   #model = KMeans(nc)
   #model.compute(X)
   #exit()
@@ -440,7 +440,7 @@ def calculate_hillslope_properties_updated(hillslopes,dem,res,latitude,
   nc = min(nc,np.unique(sd2c[m]).size)
   if nc > 1:
    tmp = np.sort(sd2c[m])
-   bin_edges = tmp[np.arange(0,tmp.size,np.int(np.ceil(float(tmp.size)/(nc+1))))]
+   bin_edges = tmp[np.arange(0,tmp.size,np.int32(np.ceil(float(tmp.size)/(nc+1))))]
    tmp = np.digitize(sd2c[m],bin_edges)
    #X = sd2c[m]
    #X = X[:,np.newaxis]
@@ -660,7 +660,10 @@ def calculate_hillslope_properties_updated(hillslopes,dem,res,latitude,
  #Finalize the properties
  for var in properties:
   #if var in ['position_array','width_array','d2c_array']:continue
-  properties[var] = np.array(properties[var])
+  if var in ['d2c_array','position_array','width_array']:
+   properties[var] = np.array(properties[var],dtype='object')
+  else:
+   properties[var] = np.array(properties[var])
 
  #Sort by hid
 
@@ -1481,7 +1484,7 @@ def cluster_hillslopes_updated(hillslopes,covariates,hp_in,nclusters,ws,dh,max_n
  tile_relief = dh#md['clustering']['tile_relief']
  max_ntiles = max_nbands#md['clustering']['max_ntiles']
  min_ntiles = min_nbands#md['clustering']['max_ntiles']
- nbins = np.round(hp_out['relief']/tile_relief).astype(np.int)
+ nbins = np.round(hp_out['relief']/tile_relief).astype(np.int32)
  nbins[nbins < min_ntiles] = min_ntiles
  nbins[nbins > max_ntiles] = max_ntiles
  hp_out['nbins'] = nbins
@@ -1600,7 +1603,7 @@ def compute_polygon_info(polygons,clusters,res):
  ys = np.copy(ys,order='F')
 
  #Assemble i/o arrays
- pcxy = np.zeros((np.int(np.max(polygons)) + 1,2),order='F').astype(np.float32)
+ pcxy = np.zeros((np.int32(np.max(polygons)) + 1,2),order='F').astype(np.float32)
  pd2o = np.zeros((4*xs.size,2),order='F').astype(np.float32)
  cd2o = np.zeros((4*xs.size,2),order='F').astype(np.float32)
  pd2o[:] = -9999
@@ -1610,7 +1613,7 @@ def compute_polygon_info(polygons,clusters,res):
  ttf.compute_polygon_info(polygons,clusters,xs,ys,pcxy,pd2o,cd2o)
  pd2o = pd2o[pd2o[:,0]!=-9999,:]
  cd2o = cd2o[cd2o[:,0]!=-9999,:]
- pmatrix = scipy.sparse.coo_matrix((np.ones(pd2o.shape[0]),(pd2o[:,0],pd2o[:,1])),shape=(np.int(np.max(polygons)) + 1,np.int(np.max(polygons)) + 1),dtype=np.float32)
+ pmatrix = scipy.sparse.coo_matrix((np.ones(pd2o.shape[0]),(pd2o[:,0],pd2o[:,1])),shape=(np.int32(np.max(polygons)) + 1,np.int32(np.max(polygons)) + 1),dtype=np.float32)
  pmatrix = pmatrix.tocsr()
 
  #Compute length between centroids
